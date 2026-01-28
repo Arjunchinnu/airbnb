@@ -6,7 +6,7 @@ const ExpressError = require("../utils/ExpressError.js");
 const { isLoggedIn, isOwner, validateListing } = require("../middlewares.js");
 const listingController = require("../controllers/listings.js");
 const multer = require("multer");
-const { storage, cloudinary } = require("../cloudconfig.js");
+const { storage, cloudinary } = require("../cloudConfig.js");
 const upload = multer({ storage });
 
 // New listing form
