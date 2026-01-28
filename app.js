@@ -20,10 +20,25 @@ const userRouter = require("./routes/users.js");
 
 // const mongo_url = "mongodb://127.0.0.1:27017/wanderlust";
 
+// mongoose
+//   .connect(process.env.MONGODB_URI)
+//   .then(() => console.log("Connected to DB"))
+//   .catch((err) => console.log("Error connecting to DB:", err));
+
 mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to DB"))
-  .catch((err) => console.log("Error connecting to DB:", err));
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 10000, // Fast fail
+    socketTimeoutMS: 45000,
+    bufferCommands: false, // ← THIS DISABLES BUFFERING TIMEOUT
+  })
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.log("❌ MongoDB Error:", err));
+
+// Wait for connection before routes
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // For parsing JSON bodies (API requests)
