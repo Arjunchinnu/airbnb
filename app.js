@@ -24,24 +24,19 @@ const userRouter = require("./routes/users.js");
 //   .connect(process.env.MONGODB_URI)
 //   .then(() => console.log("Connected to DB"))
 //   .catch((err) => console.log("Error connecting to DB:", err));
+// Connect IMMEDIATELY (let mongoose buffer queries - default behavior)
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
 
-async function connectDB() {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000
-    });
-    console.log('✅ MongoDB Connected');
-  } catch (error) {
-    console.error('❌ MongoDB Connection Error:', error);
-    process.exit(1);
-  }
-}
+mongoose.connection.on('connected', () => {
+  console.log('✅ MongoDB Connected');
+});
 
-// 3. IMPORT MODELS/ROUTES **AFTER** connection
-await connectDB();  // Wait for connection
-
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB Error:', err);
+});
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // For parsing JSON bodies (API requests)
 app.use(methodOverride("_method"));
