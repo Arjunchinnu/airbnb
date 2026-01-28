@@ -87,7 +87,9 @@ app.use("/users", userRouter);
 //   let newUser = await user.register(fakeUser, "helloworld");
 //   res.send(newUser);
 // });
-
+app.get("/", (req, res) => {
+  res.json({ message: "Mini Airbnb Backend API is live!" });
+});
 // Catch-all 404 route
 app.all(/.*/, (req, res, next) => {
   next(new ExpressError(404, "Page Not Found!"));
