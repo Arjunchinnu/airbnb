@@ -6,7 +6,7 @@ const ExpressError = require("../utils/ExpressError.js");
 const { isLoggedIn, isOwner, validateListing } = require("../middlewares.js");
 const listingController = require("../controllers/listings.js");
 const multer = require("multer");
-const { storage } = require("../cloudconfig.js");
+const { storage, cloudinary } = require("../cloudconfig.js");
 const upload = multer({ storage });
 
 // New listing form
@@ -19,7 +19,7 @@ router
     isLoggedIn,
     upload.single("listing[image]"),
     validateListing,
-    warpAsync(listingController.createNewListings)
+    warpAsync(listingController.createNewListings),
   );
 
 router
@@ -30,7 +30,7 @@ router
     isOwner,
     upload.single("listing[image]"),
     validateListing,
-    warpAsync(listingController.updateListings)
+    warpAsync(listingController.updateListings),
   )
   .delete(isLoggedIn, isOwner, warpAsync(listingController.destoryListing));
 
@@ -39,7 +39,7 @@ router.get(
   "/:id/edit",
   isLoggedIn,
   isOwner,
-  warpAsync(listingController.renderEditForm)
+  warpAsync(listingController.renderEditForm),
 );
 
 module.exports = router;
