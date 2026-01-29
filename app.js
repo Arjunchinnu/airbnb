@@ -89,13 +89,17 @@ app.get("/", (req, res) => {
   res.render("listings/home.ejs");
 });
 
+passport.use(new LocalStrategy(user.authenticate()));
+passport.serializeUser(user.serializeUser());
+passport.deserializeUser(user.deserializeUser());
+
 app.use(session(sessionOptions));
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
-passport.use(new LocalStrategy(user.authenticate()));
-passport.serializeUser(user.serializeUser());
-passport.deserializeUser(user.deserializeUser());
+// passport.use(new LocalStrategy(user.authenticate()));
+// passport.serializeUser(user.serializeUser());
+// passport.deserializeUser(user.deserializeUser());
 
 app.use((req, res, next) => {
   console.log("req.user after passport:", req.user);
@@ -125,9 +129,17 @@ app.use("/users", userRouter);
 //   let newUser = await user.register(fakeUser, "helloworld");
 //   res.send(newUser);
 // });
-app.get("/", (req, res) => {
-  res.json({ message: "Mini Airbnb Backend API is live!" });
+
+app.get("/", async (req, res) => {
+  console.log("You are in listing");
+  try {
+    const listings = await Listing.find({}); // You'll need this model
+    res.render("listings/home", { listings });
+  } catch (err) {
+    res.render("listings/home", { listings: [] });
+  }
 });
+
 // Catch-all 404 route
 app.all(/.*/, (req, res, next) => {
   next(new ExpressError(404, "Page Not Found!"));
