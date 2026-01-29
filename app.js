@@ -82,6 +82,7 @@ const sessionOptions = {
 // Routes
 app.get("/", (req, res) => {
   console.log("Connected to root");
+  res.send("root route");
 });
 
 passport.use(new LocalStrategy(User.authenticate()));
@@ -157,6 +158,7 @@ app.use((err, req, res, next) => {
 //   res.render("error.ejs", { statusCode, message });
 // res.status(statusCode).send(message);
 
-app.listen(8080, () => {
-  console.log("Server is connected on port 8080");
+const port = process.env.PORT || 10000;
+app.listen(port, "0.0.0.0", () => {
+  console.log(`✅ Server running on http://0.0.0.0:${port}`);
 });
