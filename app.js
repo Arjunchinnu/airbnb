@@ -25,18 +25,24 @@ const userRouter = require("./routes/users.js");
 //   .then(() => console.log("Connected to DB"))
 //   .catch((err) => console.log("Error connecting to DB:", err));
 // Connect IMMEDIATELY (let mongoose buffer queries - default behavior)
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+// ✅ REPLACE WITH THIS
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      bufferCommands: false,
+    });
+    console.log("✅ Connected to MongoDB");
+  } catch (err) {
+    console.error("❌ MongoDB Error:", err);
+    process.exit(1);
+  }
+};
 
-mongoose.connection.on('connected', () => {
-  console.log('✅ MongoDB Connected');
-});
+// Call it immediately
+connectDB();
 
-mongoose.connection.on('error', (err) => {
-  console.error('❌ MongoDB Error:', err);
-});
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // For parsing JSON bodies (API requests)
 app.use(methodOverride("_method"));
@@ -45,14 +51,35 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
+// const sessionOptions = {
+//   secret: "mysupersecretcode",
+//   resave: false,
+//   saveUninitialized: true,
+//   cookie: {
+//     express: Date.now() + 7 * 24 * 60 * 60 * 1000,
+//     maxAge: 7 * 24 * 60 * 60 * 1000,
+//     httpOnly: true,
+//   },
+// };
+
+// const sessionOptions = {
+//   secret: process.env.SESSION_SECRET || "mysupersecretcode", // Use env var
+//   resave: false,
+//   saveUninitialized: true,
+//   cookie: {
+//     maxAge: 7 * 24 * 60 * 60 * 1000, // Remove "express: Date.now()"
+//     httpOnly: true,
+//   },
+// };
+
 const sessionOptions = {
-  secret: "mysupersecretcode",
+  secret: process.env.SESSION_SECRET || "fallback-secret",
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false, // Fix: false for production
   cookie: {
-    express: Date.now() + 7 * 24 * 60 * 60 * 1000,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // HTTPS only in prod
   },
 };
 
@@ -64,7 +91,6 @@ app.get("/", (req, res) => {
 
 app.use(session(sessionOptions));
 app.use(flash());
-
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(user.authenticate()));
