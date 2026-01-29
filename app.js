@@ -12,7 +12,8 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
-const user = require("./models/user.js");
+const User = require("./models/user.js");
+const MongoStore = require("connect-mongo");
 
 const ListingsRouter = require("./routes/listings.js");
 const reviewRouter = require("./routes/reviews.js");
@@ -62,24 +63,19 @@ app.use(express.static(path.join(__dirname, "public")));
 //   },
 // };
 
-// const sessionOptions = {
-//   secret: process.env.SESSION_SECRET || "mysupersecretcode", // Use env var
-//   resave: false,
-//   saveUninitialized: true,
-//   cookie: {
-//     maxAge: 7 * 24 * 60 * 60 * 1000, // Remove "express: Date.now()"
-//     httpOnly: true,
-//   },
-// };
-
 const sessionOptions = {
   secret: process.env.SESSION_SECRET || "fallback-secret",
   resave: false,
-  saveUninitialized: false, // Fix: false for production
+  saveUninitialized: false,
+  store: new MongoStore({
+    // 👈 new MongoStore (not .create)
+    mongoUrl: process.env.MONGODB_URI,
+    ttl: 14 * 24 * 60 * 60, // 14 days
+  }),
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // HTTPS only in prod
+    secure: process.env.NODE_ENV === "production",
   },
 };
 
@@ -89,9 +85,9 @@ app.get("/", (req, res) => {
   res.render("listings/home.ejs");
 });
 
-passport.use(new LocalStrategy(user.authenticate()));
-passport.serializeUser(user.serializeUser());
-passport.deserializeUser(user.deserializeUser());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -105,7 +101,7 @@ app.use((req, res, next) => {
   console.log("req.user after passport:", req.user);
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
-  res.locals.currUser = req.user;
+  res.locals.currUser = req.user || null;
   console.log("set res.locals.currUser:", res.locals.currUser);
   next();
 });
