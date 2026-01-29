@@ -13,7 +13,7 @@ const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
-const MongoStore = require("connect-mongo")(session);
+const MongoStore = require("connect-mongo");
 
 const ListingsRouter = require("./routes/listings.js");
 const reviewRouter = require("./routes/reviews.js");
@@ -67,22 +67,21 @@ const sessionOptions = {
   secret: process.env.SESSION_SECRET || "fallback-secret",
   resave: false,
   saveUninitialized: false,
-  store: new MongoStore({
+  store: MongoStore.create({
+    // ✅ FIXED
     mongoUrl: process.env.MONGODB_URI,
-    ttl: 14 * 24 * 60 * 60,
   }),
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: false, // 👈 CRITICAL FIX
-    sameSite: "lax", // 👈 CRITICAL FIX
+    secure: false, // 👈 Render free tier
+    sameSite: "lax", // 👈 Add this
   },
 };
 
 // Routes
 app.get("/", (req, res) => {
   console.log("Connected to root");
-  res.render("listings/home.ejs");
 });
 
 passport.use(new LocalStrategy(User.authenticate()));
