@@ -13,7 +13,7 @@ const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
-const MongoStore = require("connect-mongo");
+const MongoStore = require("connect-mongo")(session);
 
 const ListingsRouter = require("./routes/listings.js");
 const reviewRouter = require("./routes/reviews.js");
@@ -68,14 +68,14 @@ const sessionOptions = {
   resave: false,
   saveUninitialized: false,
   store: new MongoStore({
-    // 👈 new MongoStore (not .create)
     mongoUrl: process.env.MONGODB_URI,
-    ttl: 14 * 24 * 60 * 60, // 14 days
+    ttl: 14 * 24 * 60 * 60,
   }),
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false, // 👈 CRITICAL FIX
+    sameSite: "lax", // 👈 CRITICAL FIX
   },
 };
 
